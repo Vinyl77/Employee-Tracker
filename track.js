@@ -119,50 +119,50 @@ const runOptions = () => {
      })
  };
 
-// allows user to add a new employee to database
-const addEmployee=() =>{
-    inquirer
-        .prompt([
-            {
-                name: "firstName",
-                type: "input",
-                message: "What is the employee's first name?",
-            },
-            {
-                name: "lastName",
-                type: "input",
-                message: "What is the employee's last name?",
-            },
-            {
-                name: "roleId",
-                type: "input",
-                message: "What is this employee's role ID?",
-            },
-            {
-                name: "managerId",
-                type: "input",
-                message: "What is this employee's manager ID?",
-            },
-        ])
-        .then((answer) => {
-            console.log("Adding a new employee...\n");
-            connection.query(
-                `INSERT INTO employee SET ?`,
-                {
-                    first_name: answer.firstName,
-                    last_name: answer.lastName,
-                    role_id: answer.roleId,
-                    manager_id: answer.managerId,
-                },
-                function (err, res) {
-                    if (err) throw err;
-                    console.log("New role added!\n");
-                    // Call updateProduct AFTER the INSERT completes
-                    runOptions();
-                }
-            );
-        });
-}
+// // allows user to add a new employee to database
+// const addEmployee=() =>{
+//     inquirer
+//         .prompt([
+//             {
+//                 name: "firstName",
+//                 type: "input",
+//                 message: "What is the employee's first name?",
+//             },
+//             {
+//                 name: "lastName",
+//                 type: "input",
+//                 message: "What is the employee's last name?",
+//             },
+//             {
+//                 name: "roleId",
+//                 type: "input",
+//                 message: "What is this employee's role ID?",
+//             },
+//             {
+//                 name: "managerId",
+//                 type: "input",
+//                 message: "What is this employee's manager ID?",
+//             },
+//         ])
+//         .then((answer) => {
+//             console.log("Adding a new employee...\n");
+//             connection.query(
+//                 `INSERT INTO employee SET ?`,
+//                 {
+//                     first_name: answer.firstName,
+//                     last_name: answer.lastName,
+//                     role_id: answer.roleId,
+//                     manager_id: answer.managerId,
+//                 },
+//                 function (err, res) {
+//                     if (err) throw err;
+//                     console.log("New role added!\n");
+//                     // Call updateProduct AFTER the INSERT completes
+//                     runOptions();
+//                 }
+//             );
+//         });
+// }
 
 let roleArr =[];
    const selectRole = ()=>{
@@ -236,5 +236,66 @@ let roleArr =[];
 
        }
     
-       
 
+    const addDepartment = ()=>{
+        inquirer
+            .prompt([
+                {
+                  name: 'name',
+                  type: 'input',
+                  message: 'What Department would you like to add?'
+
+
+                }
+
+            ])
+            .then((res)=>{
+                let query = connection.query(
+                    'INSERT INTO department SET?',
+                    {
+                        name: res.name
+                    },
+                    (err)=>{
+                        if (err) throw err
+                        console.table(res);
+                        runOptions();
+                    }
+                )
+
+            })
+
+    }
+
+  const addRole= () =>{
+      connection.query('SELECT role.title AS Title, role.salary AS Salary FROM role', (err, res)=>{
+          inquirer.prompt ([
+              {
+                  name: 'Title',
+                  type: 'input',
+                  message: 'What is the roles Title?'
+
+              },
+              {
+                  name: 'Salary',
+                  type: 'input',
+                  message: 'What is the Salary'
+
+              }
+          ]).then((res)=>{
+              connection.query(
+                  'INSERT INTO role SET?',
+                  {
+                      title: res.Title,
+                      salary: res.Salary,
+                  },
+                  (err)=>{
+                      if (err) throw err
+                      console.table(res);
+                      runOptions();
+                  }
+              )
+          });
+      });
+
+      
+  }
