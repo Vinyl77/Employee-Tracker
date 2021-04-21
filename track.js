@@ -1,6 +1,7 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
+const { fetchAsyncQuestionPropertyQuestionProperty } = require('inquirer/lib/utils/utils');
 
 // create connection to database
 const connection = mysql.createConnection({
@@ -16,6 +17,16 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
     if (err) throw err;
+    console.log(`
+    ╔═══╗─────╔╗──────────────╔═╗╔═╗
+    ║╔══╝─────║║──────────────║║╚╝║║
+    ║╚══╦╗╔╦══╣║╔══╦╗─╔╦══╦══╗║╔╗╔╗╠══╦═╗╔══╦══╦══╦═╗
+    ║╔══╣╚╝║╔╗║║║╔╗║║─║║║═╣║═╣║║║║║║╔╗║╔╗╣╔╗║╔╗║║═╣╔╝
+    ║╚══╣║║║╚╝║╚╣╚╝║╚═╝║║═╣║═╣║║║║║║╔╗║║║║╔╗║╚╝║║═╣║
+    ╚═══╩╩╩╣╔═╩═╩══╩═╗╔╩══╩══╝╚╝╚╝╚╩╝╚╩╝╚╩╝╚╩═╗╠══╩╝
+    ───────║║──────╔═╝║─────────────────────╔═╝║
+    ───────╚╝──────╚══╝─────────────────────╚══╝`)
+    // runs the app
     runOptions();
 
 });
@@ -108,50 +119,122 @@ const runOptions = () => {
      })
  };
 
-const addEmployee =()=>{
-    connection.query('SELECT * FROM role', (err, res)=>{
-        if (err) throw err;
-        inquirer 
-           .prompt([
-               {
-                   name: 'first_name',
-                   type: 'input',
-                   message: 'What is the employees first name?',
-
-               },
-               {
-                   name: 'last_name',
-                   type: 'input',
-                   message: 'What is the employees first name?'
-
-               },
-               {
-                   name: 'manager_id',
-                   type: 'input',
-                   message: "What is the employee's manager's ID"
-               },
-               { 
-                   name: 'role',
-                   type: 'list',
-                   choices: function(){
-                       let roleArray = [];
-                       for(let i= 0; i < res.length; i++){
-                           roleArray.push(res[i].title);
-                       }
-                       return roleArray;
-                   },
-               }
-           ]).then((answer)=>{
-               let roleID;
-               for (let j=0; j < res.length; i++){
-                   if (res[j].title == answer.role){
-                       roleID = res[j].id;
-                       console.log(roleID)
-                   }
-               }
-               connection.query(
-                   
-               )
-           })
-    })
+// allows user to add a new employee to database
+const addEmployee=() =>{
+    inquirer
+        .prompt([
+            {
+                name: "firstName",
+                type: "input",
+                message: "What is the employee's first name?",
+            },
+            {
+                name: "lastName",
+                type: "input",
+                message: "What is the employee's last name?",
+            },
+            {
+                name: "roleId",
+                type: "input",
+                message: "What is this employee's role ID?",
+            },
+            {
+                name: "managerId",
+                type: "input",
+                message: "What is this employee's manager ID?",
+            },
+        ])
+        .then((answer) => {
+            console.log("Adding a new employee...\n");
+            connection.query(
+                `INSERT INTO employee SET ?`,
+                {
+                    first_name: answer.firstName,
+                    last_name: answer.lastName,
+                    role_id: answer.roleId,
+                    manager_id: answer.managerId,
+                },
+                function (err, res) {
+                    if (err) throw err;
+                    console.log("New role added!\n");
+                    // Call updateProduct AFTER the INSERT completes
+                    runOptions();
+                }
+            );
+        });
 }
+
+let roleArr =[];
+   const selectRole = ()=>{
+       connection.query('SELECT * FROM role', (err, res)=>{
+           if (err) throw err;
+           for (let i =0; i< res.length; i++){
+               roleArr.push(res[i].title);
+           }
+       })
+       return roleArr;
+   }
+
+   let managerArray = [];
+     const selectManager = ()=>{
+         connection.query('SELECT first_name, last_name FROM employee WHERE manager_id IS NULL', (err, res)=> {
+             if (err) throw err;
+             for(let i =0; i<res.length; i++){
+                 managerArray.push(res[i].first_name);
+
+
+             }
+
+         })
+         return managerArray;
+     }
+
+     const addEmployee = ()=>{
+         inquirer
+              .prompt ([
+             {
+                 name: 'firstname',
+                 type: 'input',
+                 message: 'Enter their first name'
+
+             },
+             {
+                name: 'lastname',
+                type: 'input',
+                message: 'Enter their last name'
+             },
+             {
+                name: 'role',
+                type: 'list',
+                message: 'What is their role?',
+                choices: selectRole()
+             },
+             {
+                 name: 'choice',
+                 type: 'rawlist',
+                 message: 'What is their managers name?',
+                 choices: selectManager()
+             }
+        ])
+        .then((val)=>{
+            let roleId = selectRole().indexOf(val.role) + 1
+            let managerId = selectManager().indexOf(val.choice) + 1
+
+            connection.query('INSERT INTO employee SET?',
+            {
+                first_name: val.firstName,
+                last_name: val.lastName,
+                manager_id: managerId,
+                role_id: roleId
+            }, (err)=>{
+                if (err) throw err;
+                console.table(val)
+                runOptions()
+            })
+
+            })
+
+       }
+    
+       
+
