@@ -1,3 +1,4 @@
+// creating dependencies
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
@@ -30,7 +31,7 @@ connection.connect((err) => {
     runOptions();
 
 });
-
+// the app propmts user choices.
 const runOptions = () => {
     inquirer
        .prompt({
@@ -71,12 +72,12 @@ const runOptions = () => {
                   addRole();
                   break;
             case 'Update employee role':
-                  updateRole();
+                  updateEmployee();
                   break;
             case 'Delete an employee':
                   deleteEmployee();
                   break;
-            case 'EXIT':
+            case 'exit':
                   exitApp();
                   break;
             default:
@@ -299,3 +300,29 @@ let roleArr =[];
 
       
   }
+const updateEmployee = ()=>{
+    inquirer.prompt([
+        {
+            type: 'input',
+            message: 'Which employee would you like to update',
+            name: 'roleUpdate'
+        },
+        {
+            type: 'input',
+            message: 'What would you like to update?',
+            name: 'updateEmployee'
+        }
+    ]).then((answer)=>{
+        connection.query('UPDATE employee SET role_id=? WHERE first_name=?',[answer.updateEmployee, answer.roleUpdate],(err, res)=>{
+            if (err) throw err;
+            console.table(res);
+            runOptions();
+
+        });
+    });
+}
+
+const deleteEmployee=()=>{
+
+}
+    
