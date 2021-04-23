@@ -47,7 +47,7 @@ const runOptions = () => {
                'Add a role',
                'Update employee role',
                'Delete an employee',
-               'EXIT'
+               'exit'
 
               ]
       })
@@ -74,9 +74,7 @@ const runOptions = () => {
             case 'Update employee role':
                   updateEmployee();
                   break;
-            case 'Delete an employee':
-                  deleteEmployee();
-                  break;
+           
             case 'exit':
                   exitApp();
                   break;
@@ -120,51 +118,8 @@ const runOptions = () => {
      })
  };
 
-// // allows user to add a new employee to database
-// const addEmployee=() =>{
-//     inquirer
-//         .prompt([
-//             {
-//                 name: "firstName",
-//                 type: "input",
-//                 message: "What is the employee's first name?",
-//             },
-//             {
-//                 name: "lastName",
-//                 type: "input",
-//                 message: "What is the employee's last name?",
-//             },
-//             {
-//                 name: "roleId",
-//                 type: "input",
-//                 message: "What is this employee's role ID?",
-//             },
-//             {
-//                 name: "managerId",
-//                 type: "input",
-//                 message: "What is this employee's manager ID?",
-//             },
-//         ])
-//         .then((answer) => {
-//             console.log("Adding a new employee...\n");
-//             connection.query(
-//                 `INSERT INTO employee SET ?`,
-//                 {
-//                     first_name: answer.firstName,
-//                     last_name: answer.lastName,
-//                     role_id: answer.roleId,
-//                     manager_id: answer.managerId,
-//                 },
-//                 function (err, res) {
-//                     if (err) throw err;
-//                     console.log("New role added!\n");
-//                     // Call updateProduct AFTER the INSERT completes
-//                     runOptions();
-//                 }
-//             );
-//         });
-// }
 
+// function to select role
 let roleArr =[];
    const selectRole = ()=>{
        connection.query('SELECT * FROM role', (err, res)=>{
@@ -175,7 +130,7 @@ let roleArr =[];
        })
        return roleArr;
    }
-
+//  function to select manager
    let managerArray = [];
      const selectManager = ()=>{
          connection.query('SELECT first_name, last_name FROM employee WHERE manager_id IS NULL', (err, res)=> {
@@ -189,7 +144,7 @@ let roleArr =[];
          })
          return managerArray;
      }
-
+// adding an employee
      const addEmployee = ()=>{
          inquirer
               .prompt ([
@@ -237,8 +192,8 @@ let roleArr =[];
 
        }
     
-
-    const addDepartment = ()=>{
+// adding a department
+const addDepartment = ()=>{
         inquirer
             .prompt([
                 {
@@ -266,7 +221,7 @@ let roleArr =[];
             })
 
     }
-
+// adding role to employee
   const addRole= () =>{
       connection.query('SELECT role.title AS Title, role.salary AS Salary FROM role', (err, res)=>{
           inquirer.prompt ([
@@ -300,6 +255,7 @@ let roleArr =[];
 
       
   }
+//   updating employee and role
 const updateEmployee = ()=>{
     inquirer.prompt([
         {
@@ -322,7 +278,7 @@ const updateEmployee = ()=>{
     });
 }
 
-const deleteEmployee=()=>{
+const exitApp=()=>{
+    connection.end();
 
 }
-    
