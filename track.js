@@ -76,7 +76,7 @@ const runOptions = () => {
                   break;
            
             case 'exit':
-                  exitApp();
+                  connection.end();
                   break;
             default:
                 break;
@@ -120,165 +120,196 @@ const runOptions = () => {
 
 
 // function to select role
-let roleArr =[];
-   const selectRole = ()=>{
-       connection.query('SELECT * FROM role', (err, res)=>{
-           if (err) throw err;
-           for (let i =0; i< res.length; i++){
-               roleArr.push(res[i].title);
-           }
-       })
-       return roleArr;
-   }
-//  function to select manager
-   let managerArray = [];
-     const selectManager = ()=>{
-         connection.query('SELECT first_name, last_name FROM employee WHERE manager_id IS NULL', (err, res)=> {
-             if (err) throw err;
-             for(let i =0; i<res.length; i++){
-                 managerArray.push(res[i].first_name);
+// let roleArr =[];
+//    const selectRole = ()=>{
+//        connection.query('SELECT * FROM role', (err, res)=>{
+//            if (err) throw err;
+//            for (let i =0; i< res.length; i++){
+//                roleArr.push(res[i].title);
+//            }
+//        })
+//        return roleArr;
+//    }
+// //  function to select manager
+//    let managerArray = [];
+//      const selectManager = ()=>{
+//          connection.query('SELECT first_name, last_name FROM employee WHERE manager_id IS NULL', (err, res)=> {
+//              if (err) throw err;
+//              for(let i =0; i<res.length; i++){
+//                  managerArray.push(res[i].first_name);
 
 
-             }
+//              }
 
-         })
-         return managerArray;
-     }
-// adding an employee
-     const addEmployee = ()=>{
-         inquirer
-              .prompt ([
-             {
-                 name: 'firstname',
-                 type: 'input',
-                 message: 'Enter their first name'
+//          })
+//          return managerArray;
+//      }
+// // adding an employee
+   
+// Add Employee Function
+const addEmployee = () =>
+inquirer
+  .prompt([
+    {
+      message: 'Enter first name of new employee:',
+      type: 'input',
+      name: 'employeeFirstName',
+    },
+    {
+      message: 'Enter last name of new employee:',
+      type: 'input',
+      name: 'employeeLastName',
+    },
+    {
+      message: 'Enter Role ID of new employee:',
+      type: 'input',
+      name: 'employeeRole',
+    },
+    {
+      message: 'Enter Manager ID of new employee:',
+      type: 'input',
+      name: 'employeeManagerId',
+    },
+  ])
+  .then(answer => {
+    connection.query(
+      'INSERT INTO employee SET ?',
+      {
+        first_name: answer.employeeFirstName,
+        last_name: answer.employeeLastName,
+        role_id: answer.employeeRole,
+        manager_id: answer.employeeManagerId,
+      },
+      function(err, res) {
+        if (err) throw err;
+        console.log(
+          `You have entered ${answer.employeeFirstName} ${answer.employeeLastName} in the employee database.`
+        );
+        runOptions();
+      }
+    );
+  });
 
-             },
-             {
-                name: 'lastname',
-                type: 'input',
-                message: 'Enter their last name'
-             },
-             {
-                name: 'role',
-                type: 'list',
-                message: 'What is their role?',
-                choices: selectRole()
-             },
-             {
-                 name: 'choice',
-                 type: 'rawlist',
-                 message: 'What is their managers name?',
-                 choices: selectManager()
-             }
-        ])
-        .then((val)=>{
-            let roleId = selectRole().indexOf(val.role) + 1
-            let managerId = selectManager().indexOf(val.choice) + 1
+// Add department Function
+const addDepartment = () =>
+inquirer
+  .prompt([
+    {
+      type: 'input',
+      name: 'deptName',
+      message: 'What department would you like to add?',
+    },
+  ])
+  .then(answer => {
+    connection.query(
+      'INSERT INTO department (name) VALUES (?)',
+      answer.deptName,
+      function(err, res) {
+        if (err) throw err;
+        console.log(
+          `You have entered ${answer.deptName} into your department database.`
+        );
+        runOptions()
+        
+      }
+    );
+  });
 
-            connection.query('INSERT INTO employee SET?',
-            {
-                first_name: val.firstName,
-                last_name: val.lastName,
-                manager_id: managerId,
-                role_id: roleId
-            }, (err)=>{
-                if (err) throw err;
-                console.table(val)
-                runOptions()
-            })
+// Add role Function
+const addRole = () =>
+inquirer
+  .prompt([
+    {
+      type: 'input',
+      name: 'addRole',
+      message: 'What role would you like to add?',
+    },
+    {
+      type: 'input',
+      name: 'roleSalary',
+      message: 'What is the salary for this role?',
+    },
+    {
+      type: 'input',
+      name: 'departmentID',
+      message: "What is this role's department id?",
+    },
+  ])
+  .then(answer => {
+    connection.query(
+      'INSERT INTO role SET ?',
+      {
+        title: answer.addRole,
+        salary: answer.roleSalary,
+        department_id: answer.departmentID,
+      },
+      function(err, res) {
+        if (err) throw err;
+        console.log(
+          `You have entered ${answer.addRole} into your role database.`
+        );
+        runOptions();
+      }
+    );
+  });
 
-            })
-
-       }
-    
-// adding a department
-const addDepartment = ()=>{
-        inquirer
-            .prompt([
-                {
-                  name: 'name',
-                  type: 'input',
-                  message: 'What Department would you like to add?'
-
-
-                }
-
-            ])
-            .then((res)=>{
-                let query = connection.query(
-                    'INSERT INTO department SET?',
-                    {
-                        name: res.name
-                    },
-                    (err)=>{
-                        if (err) throw err
-                        console.table(res);
-                        runOptions();
-                    }
-                )
-
-            })
-
+// Update Employee Role Function
+const updateEmployee = () => {
+const employeeArray = [];
+const roleArray = [];
+connection.query(
+  `SELECT CONCAT (employee.first_name, ' ', employee.last_name) as employee FROM employee_trackerDB.employee`,
+  (err, res) => {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      employeeArray.push(res[i].employee);
     }
-// adding role to employee
-  const addRole= () =>{
-      connection.query('SELECT role.title AS Title, role.salary AS Salary FROM role', (err, res)=>{
-          inquirer.prompt ([
-              {
-                  name: 'Title',
-                  type: 'input',
-                  message: 'What is the roles Title?'
-
-              },
-              {
-                  name: 'Salary',
-                  type: 'input',
-                  message: 'What is the Salary'
-
-              }
-          ]).then((res)=>{
-              connection.query(
-                  'INSERT INTO role SET?',
-                  {
-                      title: res.Title,
-                      salary: res.Salary,
-                  },
-                  (err)=>{
-                      if (err) throw err
-                      console.table(res);
-                      runOptions();
-                  }
-              )
-          });
-      });
-
-      
-  }
-//   updating employee and role
-const updateEmployee = ()=>{
-    inquirer.prompt([
-        {
-            type: 'input',
-            message: 'Which employee would you like to update',
-            name: 'roleUpdate'
-        },
-        {
-            type: 'input',
-            message: 'What would you like to update?',
-            name: 'updateEmployee'
+    connection.query(
+      `SELECT title FROM employee_trackerDB.role`,
+      (err, res) => {
+        if (err) throw err;
+        for (let i = 0; i < res.length; i++) {
+          roleArray.push(res[i].title);
         }
-    ]).then((answer)=>{
-        connection.query('UPDATE employee SET role_id=? WHERE first_name=?',[answer.updateEmployee, answer.roleUpdate],(err, res)=>{
-            if (err) throw err;
-            console.table(res);
-            runOptions();
 
+        inquirer
+          .prompt([
+            {
+              name: 'name',
+              type: 'list',
+              message: `Who's role would you like to change?`,
+              choices: employeeArray,
+            },
+            {
+              name: 'role',
+              type: 'list',
+              message: 'What would you like to change their role to?',
+              choices: roleArray,
+            },
+          ])
+          .then(answers => {
+            let currentRole;
+            const name = answers.name.split(' ');
+            connection.query(
+              `SELECT id FROM employee_trackerDB.role WHERE title = '${answers.role}'`,
+              (err, res) => {
+                if (err) throw err;
+                for (let i = 0; i < res.length; i++) {
+                  currentRole = res[i].id;
+                }
+                connection.query(
+                  `UPDATE employee_trackerDB.employee SET role_id = ${currentRole} WHERE first_name= '${name[0]}' AND last_name= '${name[1]}';`,
+                  (err, res) => {
+                    if (err) throw err;
+                    console.log(`You have successfully upated the role.`);
+                    runOptions();
+                 }
+              );
+            }
+          );
         });
-    });
-}
-
-const exitApp=()=>{
-    connection.end();
-
-}
+      }
+    ); 
+   }
+  );
+};
